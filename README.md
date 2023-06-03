@@ -1,6 +1,7 @@
 # HUAL
 CVPR 2023 "Are Binary Annotations Sufficient? Video Moment Retrieval via Hierarchical Uncertainty-based Active Learning"
 
+** There are still some bugs when inferring, because we reconstruct our code for easily reading. **
 
 ![overview](/images/architecture.png)
 
@@ -65,24 +66,3 @@ python main.py --task charades --max_pos_len 64 --char_dim 50 --suffix 'suffix+I
 # For convenience, the follow script can summary perfomacnce.
 python summary_performance.py suffix
 ```
-
-
-
-
-
->>>>>>> 885ba71... init
-=======
-CVPR 2023 "Are Binary Annotations Sufficient? Video Moment Retrieval via Hierarchical Uncertainty-based Active Learning"
-=======
-CVPR 2023 "Are Binary Annotations Sufficient? Video Moment Retrieval via Hierarchical Uncertainty-based Active Learning" 
-
-
->>>>>>> f7b77ee... Update README.md
-Coming soon...
->>>>>>> 858ff0f... Update README.md
-=======
-CVPR 2023 "Are Binary Annotations Sufficient? Video Moment Retrieval via Hierarchical Uncertainty-based Active Learning" 
-
-
-Coming soon...
->>>>>>> f7b77ee082afaecec336c1b24800f8c7481ebb1a

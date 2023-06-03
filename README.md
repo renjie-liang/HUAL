@@ -10,28 +10,27 @@ CVPR 2023 "Are Binary Annotations Sufficient? Video Moment Retrieval via Hierarc
 
 ## Preparation
 The visual features of `Charades-STA` and `ActivityNet Captions` are available at [Box Drive](
-https://app.box.com/s/d7q5atlidb31cuj1u8znd7prgrck1r1s), download and place them under the `./data/features/` directory. 
-Download the word embeddings from [here](http://nlp.stanford.edu/data/glove.840B.300d.zip) and place it to 
-`./data/features/` directory. Directory hierarchies are shown below:
+https://app.box.com/s/d7q5atlidb31cuj1u8znd7prgrck1r1s).
+Download the word embeddings from [here](http://nlp.stanford.edu/data/glove.840B.300d.zip). Modify the path setting in `./configs/charades/SeqPAN.yaml`.
+
+Directory hierarchies are shown below:
 ```
 HUAL
     |____ ckpt/
+    |____ logs/
+    |____ data_pkl/
     |____ data/
-        |____ datasets/
-        |____ features/
-            |____ activitynet/
-            |____ charades/
-            |____ glove/glove.840B.300d.txt
+        |____ anet_gt/
+        |____ anet_re0/
+        |____ anet_re1/
+        ...
+        |____ anet_re10/
 
-    |____ scripts_iter/
-        |____ data/
-            |___PSEUDO_LABEL/
-            
+    |____ update_label/
+        ...
     |___ results/
         |____ activitynet/
         |____ charades/
-
-
     ...
 ```
 

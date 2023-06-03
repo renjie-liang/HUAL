@@ -1,5 +1,4 @@
 # HUAL
-<<<<<<< HEAD
 CVPR 2023 "Are Binary Annotations Sufficient? Video Moment Retrieval via Hierarchical Uncertainty-based Active Learning"
 
 
@@ -81,3 +80,9 @@ CVPR 2023 "Are Binary Annotations Sufficient? Video Moment Retrieval via Hierarc
 >>>>>>> f7b77ee... Update README.md
 Coming soon...
 >>>>>>> 858ff0f... Update README.md
+=======
+CVPR 2023 "Are Binary Annotations Sufficient? Video Moment Retrieval via Hierarchical Uncertainty-based Active Learning" 
+
+
+Coming soon...
+>>>>>>> f7b77ee082afaecec336c1b24800f8c7481ebb1a

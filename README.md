@@ -38,31 +38,13 @@ HUAL
 ## Quick Start
 **Train**
 ```shell script
-
-# iterative train ActivityNet Captions dataset
-python run_anet.py
-# iterative train Charades-STA dataset
-python run_charades.py
-
 # The above scripts can both update pseudo label and train model iteratively.
-# The processing can also be run step by step as follow. 'suffix' is the name of iteration, 'I' is the times of iteration. 
+# The processing can also be run step by step as follow. '--re' is the times of iteration. 
 # 1. Update pseudo label.
-python ./scripts_iter/iter_charades_TTT.py suffix I
+python update_label/update_charades.py 0
 # 2. Train model.
-python main.py --task charades --max_pos_len 64 --char_dim 50  --suffix 'suffix+I'
+python main.py --config ./configs/charades/SeqPAN.yaml --gpu_idx 1 --re 0 --suffix debug --mode train
 # 3. Generate model predict of train dataset.
-python main.py --task charades --max_pos_len 64 --char_dim 50  --suffix 'suffix+I'
+python main.py --config ./configs/charades/SeqPAN.yaml --gpu_idx 1 --re 0 --suffix debug --mode test
 
-```
-**Test**
-```shell script
-
-# Test ActivityNet Captions dataset
-python main.py --task activitynet --max_pos_len 100 --char_dim 100 --suffix 'suffix+I' --mode test
-
-# Test Charades-STA dataset
-python main.py --task charades --max_pos_len 64 --char_dim 50 --suffix 'suffix+I' --mode test
-
-# For convenience, the follow script can summary perfomacnce.
-python summary_performance.py suffix
 ```

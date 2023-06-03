@@ -186,7 +186,7 @@ if __name__ == "__main__":
     main(old_path, new_path, prop_path, I)
     
     cp_testjson(GT_PATH, new_path)
-    
     old_miou = miou_two_dataset(GT_PATH, old_path)
     new_miou = miou_two_dataset(GT_PATH, new_path)
+    print("mIoU[GT, pseudo]:")
     print("{:.4f} -> {:.4f}".format(old_miou, new_miou))

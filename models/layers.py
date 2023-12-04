@@ -159,7 +159,7 @@ def matching_loss(inputs, labels, label_size, mask, tau=0.3, gumbel=True, reuse=
         # (batch_size, seq_length, label_size)
         logits = conv1d(inputs, dim=label_size, use_bias=True, reuse=reuse, name='dense')
         # prepare labels
-        # labels = tf.one_hot(labels, depth=label_size, axis=-1, dtype=logits.dtype)
+        labels = tf.one_hot(labels, depth=label_size, axis=-1, dtype=logits.dtype)
         if gumbel:
             # sample gumbel noise
             noise = gumbel_sample(tf.shape(input=logits))
@@ -183,7 +183,7 @@ def localizing_loss(start_logits, end_logits, y1, y2, mask):
     return loss
 
 
-def ans_predictor(start_logits, end_logits, mask, match_scores):
+def ans_predictor(start_logits, end_logits, mask):
 
     
     start_logits = mask_logits(start_logits, mask=mask)

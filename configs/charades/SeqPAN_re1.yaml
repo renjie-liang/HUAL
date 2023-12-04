@@ -1,0 +1,29 @@
+task: charades
+paths:
+    ckpt_dir: ./ckpt
+    cache_dir: ./data_pkl/
+    feature_path: /storage_fast/rjliang/charades/feat/i3d_v0
+    glove_path: /storage_fast/rjliang/glove/glove.6B.300d.txt
+    train_path: ./data/charades_re1/train.json
+    test_path: ./data/charades_re1/test.json
+    val_path: ''
+train:
+    epochs: 100
+    batch_size: 16
+    lr: 0.0001
+    clip_norm: 1.0
+model:
+    name: SeqPAN
+    max_vlen: 64
+    max_tlen: 30
+    vdim: 1024
+    dim: 128
+    num_heads: 8
+    word_dim: 300
+    char_dim: 50
+    droprate: 0.2
+    attn_layer: 2
+loss:
+    match_lambda: 1.0
+    tau: 0.3
+    no_gumbel: true

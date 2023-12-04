@@ -1,0 +1,5 @@
+tqdm
+tensorflow
+nltk
+pyyaml
+easydict

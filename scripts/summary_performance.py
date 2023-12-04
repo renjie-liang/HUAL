@@ -3,7 +3,7 @@ import re
 import json
 import numpy as np
 import sys
-from update_label.utils_hual import miou_two_dataset
+from utils.utils_hual import miou_two_dataset
 
 # suffix = "TTT"
 suffix = sys.argv[1]

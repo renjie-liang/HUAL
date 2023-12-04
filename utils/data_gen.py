@@ -111,12 +111,16 @@ def dataset_gen(data, vfeat_lens, word_dict, char_dict, configs):
         dataset.append(result)
     return dataset
 
+def gen_train_data_cache_path(configs):
+    feat_version = os.path.split(configs.paths.feature_path)[-1]
+    save_path = os.path.join(configs.paths.cache_dir, '_'.join([configs.task, feat_version, str(configs.model.max_vlen), configs.suffix]) + '.pkl')
+    return save_path
+
 def gen_or_load_dataset(configs):
     if not os.path.exists(configs.paths.cache_dir):
         os.makedirs(configs.paths.cache_dir)
-    feat_version = os.path.split(configs.paths.feature_path)[-1]
-    save_name = '_'.join([configs.task, str(configs.model.max_vlen), configs.model.name, configs.re]) + '.pkl'
-    save_path = os.path.join(configs.paths.cache_dir, save_name)
+    save_path = gen_train_data_cache_path(configs)
+    
     if os.path.exists(save_path):
         dataset = load_pickle(save_path)
         return dataset

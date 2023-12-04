@@ -6,7 +6,7 @@ CVPR 2023 "Are Binary Annotations Sufficient? Video Moment Retrieval via Hierarc
 ![overview](/images/architecture.png)
 
 ## Prerequisites
-- python3 with tensorflow>=`2.0`, pytorch, tqdm, nltk, numpy, eta.
+- pip install 
 
 ## Preparation
 The visual features of `Charades-STA` and `ActivityNet Captions` are available at [Box Drive](

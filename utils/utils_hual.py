@@ -4,8 +4,6 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import pickle
-# from zzz_active_re1 import index_to_time
-import matplotlib.pyplot as plt
 import math
 import os
 import shutil
@@ -136,18 +134,18 @@ def hist_data(file_path):
 
 
 
-def plt_hist(file_path, save_name, bins=64, high=20000):
-    S, E = hist_data(file_path)
-    plt.cla()
-    plt.hist(S, bins=bins)
-    plt.xlim(0, 1)
-    plt.ylim(0, high)
-    plt.savefig(save_name.format("S"))
-    plt.cla()
-    plt.hist(E, bins=bins)
-    plt.ylim(0, high)
-    plt.xlim(0, 1)
-    plt.savefig(save_name.format("E"))
+# def plt_hist(file_path, save_name, bins=64, high=20000):
+#     S, E = hist_data(file_path)
+#     plt.cla()
+#     plt.hist(S, bins=bins)
+#     plt.xlim(0, 1)
+#     plt.ylim(0, high)
+#     plt.savefig(save_name.format("S"))
+#     plt.cla()
+#     plt.hist(E, bins=bins)
+#     plt.ylim(0, high)
+#     plt.xlim(0, 1)
+#     plt.savefig(save_name.format("E"))
 
 
 
@@ -292,3 +290,19 @@ def cp_testjson(gt_path, new_path):
     gt_test = os.path.join(os.path.split(gt_path)[0], "test.json")
     new_test = os.path.join(os.path.split(new_path)[0], "test.json")
     shutil.copy(gt_test, new_test)
+
+
+from omegaconf import OmegaConf
+
+def generate_configs(base_configs_path, task, I):
+    conf = OmegaConf.load(base_configs_path)
+    new_train_path = "./data/{}_re{}/train.json".format(task, I)
+    new_test_path = "./data/{}_re{}/test.json".format(task, I)
+    conf.paths.train_path = new_train_path
+    conf.paths.test_path = new_test_path
+    
+    new_config_path = os.path.splitext(base_configs_path)
+    new_config_path = new_config_path[0] + f"_re{I}" + new_config_path[1]
+    with open(new_config_path, "w") as f:
+        OmegaConf.save(conf, f)
+    return new_config_path, conf

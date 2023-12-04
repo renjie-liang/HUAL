@@ -1,11 +1,11 @@
 import json
 import numpy as np
 import math
-from utils_hual import time_to_index, index_to_time
+from utils.utils_hual import time_to_index, index_to_time
 import pickle
-from utils_hual import miou_two_dataset, miou_two_dataset_idx, plt_hist, calculate_iou, infer_idx
-from utils_hual import get_uncert_model, sigmoid, append_AP, center_width_gauss, fill_isactivate, get_segment
-from utils_hual import get_distance_score, get_distance_score_shift
+from utils.utils_hual import miou_two_dataset, miou_two_dataset_idx, plt_hist, calculate_iou, infer_idx
+from utils.utils_hual import get_uncert_model, sigmoid, append_AP, center_width_gauss, fill_isactivate, get_segment
+from utils.utils_hual import get_distance_score, get_distance_score_shift
 import sys
 import random
 import torch

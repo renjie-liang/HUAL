@@ -5,8 +5,8 @@
         "cache_dir" : "./data_pkl/",
         "feature_path": "/storage_fast/rjliang/charades/feat/i3d_v0",
         "glove_path": "/storage_fast/rjliang/glove/glove.840B.300d.txt",
-        "train_path": "./data/charades_re{}/train.json",
-        "test_path": "./data/charades_re{}/test.json",
+        "train_path": "./data/charades_gt/train.json",
+        "test_path": "./data/charades_gt/test.json",
         "val_path": ""
     },
   "train": {

@@ -5,9 +5,9 @@ from easydict import EasyDict
 sys.path.insert(0, os.getcwd())
 from tqdm import tqdm
 
-from utils_hual import miou_two_dataset, calculate_iou, cp_testjson
-from utils_hual import get_uncert_model, sigmoid, append_AP, center_width_gauss
-from utils_hual import get_distance_score, get_distance_score_shift
+from utils.utils_hual import miou_two_dataset, calculate_iou, cp_testjson
+from utils.utils_hual import get_uncert_model, sigmoid, append_AP, center_width_gauss
+from utils.utils_hual import get_distance_score, get_distance_score_shift
 from utils.data_utils import save_json, load_json, load_pickle, time_to_index, index_to_time
 
 F_renew = {"pos":{
@@ -176,11 +176,13 @@ def main(old_path, new_path, prop_path, I):
 
 if __name__ == "__main__":
 
-    I = int(sys.argv[1])
-    old_path = "./data/charades_re{}/train.json".format(I)
-    new_path = "./data/charades_re{}/train.json".format(I+1)
-    prop_path = "./results/charades/re{}.pkl".format(I)
-    GT_PATH = './data/charades_gt/train.json'
+    task, I = sys.argv[1:3]
+    I = int(I)
+    
+    old_path = "./data/{}_re{}/train.json".format(task, I-1)
+    new_path = "./data/{}_re{}/train.json".format(task, I)
+    prop_path = "./results/{}/re{}.pkl".format(task, I-1)
+    GT_PATH = './data/{}_gt/train.json'.format(task)
     
     os.makedirs(os.path.split(new_path)[0], exist_ok=True)
     main(old_path, new_path, prop_path, I)

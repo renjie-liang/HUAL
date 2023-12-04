@@ -55,7 +55,7 @@ def plot_se_label(s_labels, e_labels, match_labels):
 
 def get_feed_dict(batch_data, model, lr=None, drop_rate=None, mode='train'):
     if mode == 'train':  # training
-        (raw_data, vfeats, vfeat_lens, word_ids, char_ids, s_labels, e_labels, match_labels) = batch_data
+        (raw_data, vfeats, vfeat_lens, word_ids, char_ids, s_labels, e_labels, match_labels, inner_labels) = batch_data
         # plot_se_label(s_labels, e_labels, match_labels)
         feed_dict = {model.video_inputs: vfeats, model.video_seq_len: vfeat_lens, model.word_ids: word_ids,
                      model.char_ids: char_ids, model.y1: s_labels, model.y2: e_labels, model.lr: lr,
@@ -68,31 +68,32 @@ def get_feed_dict(batch_data, model, lr=None, drop_rate=None, mode='train'):
         return raw_data, feed_dict
 
 
-# def eval_test(sess, model, data_loader, epoch=None, global_step=None, mode="test"):
-#     ious = list()
-#     for data in tqdm(data_loader.test_iter(mode), total=data_loader.num_batches(mode), desc="evaluate {}".format(mode)):
-#         raw_data, feed_dict = get_feed_dict(data, model, drop_rate=0.0, mode=mode)
-#         start_indexes, end_indexes = sess.run([model.start_index, model.end_index], feed_dict=feed_dict)
-#         for record, start_index, end_index in zip(raw_data, start_indexes, end_indexes):
-#             # print(record["vid"], record["words"], record["duration"])
-#             start_time, end_time = index_to_time([start_index, end_index], record["duration"], record["v_len"])
-#             gs, ge = index_to_time([record['s_ind'], record['e_ind']],  record["duration"], record['v_len'])
-#             iou = calculate_iou(i0=[start_time, end_time], i1=[gs, ge])
-#             # print("iou:{:.4f} | gt: {:.2f}  {:.2f} | predict: {:.2f}  {:.2f}".format(iou, gs, ge ,start_time, end_time))
-#             ious.append(iou)
-#     r1i3 = calculate_iou_accuracy(ious, threshold=0.3)
-#     r1i5 = calculate_iou_accuracy(ious, threshold=0.5)
-#     r1i7 = calculate_iou_accuracy(ious, threshold=0.7)
-#     mi = np.mean(ious) * 100.0
-#     value_pairs = [("{}/Rank@1, IoU=0.3".format(mode), r1i3), ("{}/Rank@1, IoU=0.5".format(mode), r1i5),
-#                    ("{}/Rank@1, IoU=0.7".format(mode), r1i7), ("{}/mean IoU".format(mode), mi)]
-#     # write the scores
-#     score_str = "Epoch {}, Step {}:\n".format(epoch, global_step)
-#     score_str += "Rank@1, IoU=0.3: {:.2f}\t".format(r1i3)
-#     score_str += "Rank@1, IoU=0.5: {:.2f}\t".format(r1i5)
-#     score_str += "Rank@1, IoU=0.7: {:.2f}\t".format(r1i7)
-#     score_str += "mean IoU: {:.2f}\n".format(mi)
-#     return r1i3, r1i5, r1i7, mi, value_pairs, score_str
+def eval_test_old(sess, model, data_loader, epoch=None, global_step=None, mode="test"):
+    ious = list()
+    for data in tqdm(data_loader.test_iter(mode), total=data_loader.num_batches(mode), desc="evaluate {}".format(mode)):
+        raw_data, feed_dict = get_feed_dict(data, model, drop_rate=0.0, mode=mode)
+        print(raw_data)
+        start_indexes, end_indexes = sess.run([model.start_index, model.end_index], feed_dict=feed_dict)
+        for record, start_index, end_index in zip(raw_data, start_indexes, end_indexes):
+            # print(record["vid"], record["words"], record["duration"])
+            start_time, end_time = index_to_time([start_index, end_index],record["v_len"], record["duration"])
+            gs, ge = index_to_time([record['s_ind'], record['e_ind']],  record['v_len'], record["duration"])
+            iou = calculate_iou(i0=[start_time, end_time], i1=[gs, ge])
+            # print("iou:{:.4f} | gt: {:.2f}  {:.2f} | predict: {:.2f}  {:.2f}".format(iou, gs, ge ,start_time, end_time))
+            ious.append(iou)
+    r1i3 = calculate_iou_accuracy(ious, threshold=0.3)
+    r1i5 = calculate_iou_accuracy(ious, threshold=0.5)
+    r1i7 = calculate_iou_accuracy(ious, threshold=0.7)
+    mi = np.mean(ious) * 100.0
+    value_pairs = [("{}/Rank@1, IoU=0.3".format(mode), r1i3), ("{}/Rank@1, IoU=0.5".format(mode), r1i5),
+                   ("{}/Rank@1, IoU=0.7".format(mode), r1i7), ("{}/mean IoU".format(mode), mi)]
+    # write the scores
+    score_str = "Epoch {}, Step {}:\n".format(epoch, global_step)
+    score_str += "Rank@1, IoU=0.3: {:.2f}\t".format(r1i3)
+    score_str += "Rank@1, IoU=0.5: {:.2f}\t".format(r1i5)
+    score_str += "Rank@1, IoU=0.7: {:.2f}\t".format(r1i7)
+    score_str += "mean IoU: {:.2f}\n".format(mi)
+    return r1i3, r1i5, r1i7, mi, value_pairs, score_str
 
 
 

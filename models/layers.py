@@ -180,54 +180,69 @@ def localizing_loss(start_logits, end_logits, y1, y2, mask):
     start_losses = tf.nn.softmax_cross_entropy_with_logits(logits=start_logits, labels=y1)
     end_losses = tf.nn.softmax_cross_entropy_with_logits(logits=end_logits, labels=y2)
     loss = tf.reduce_mean(input_tensor=start_losses + end_losses)
+
+    # std_s = tf.math.reduce_variance(start_logits)
+    # std_e = tf.math.reduce_variance(end_logits)
+    # start_losses = start_losses / std_s + std_s
+    # end_losses = end_losses / std_e + std_e
+    # loss_s = tf.reduce_mean(input_tensor=start_losses)
+    # loss_e = tf.reduce_mean(input_tensor=end_losses)
+
     return loss
 
 
 def ans_predictor(start_logits, end_logits, mask):
-
-    
     start_logits = mask_logits(start_logits, mask=mask)
     end_logits = mask_logits(end_logits, mask=mask)
-
-    # start_logits = start_logits * match_scores[:, :, 1] 
-    # end_logits = end_logits *  match_scores[:, :, 3] 
-
-    # start_prob = tf.nn.softmax(start_logits, axis=1)
-    # end_prob = tf.nn.softmax(end_logits, axis=1)
-    start_prob = tf.nn.sigmoid(start_logits)
-    end_prob = tf.nn.sigmoid(end_logits)
-
+    start_prob = tf.nn.softmax(start_logits, axis=1)
+    end_prob = tf.nn.softmax(end_logits, axis=1)
     outer = tf.matmul(tf.expand_dims(start_prob, axis=2), tf.expand_dims(end_prob, axis=1))
     outer = tf.linalg.band_part(outer, num_lower=0, num_upper=-1)
     start_index = tf.argmax(input=tf.reduce_max(input_tensor=outer, axis=2), axis=1)
     end_index = tf.argmax(input=tf.reduce_max(input_tensor=outer, axis=1), axis=1)
     return start_index, end_index
 
+def kl_for_log_probs(log_p, log_q):
+    p = tf.exp(log_p)
+    neg_ent = tf.reduce_sum(p * log_p, axis=-1)
+    neg_cross_ent = tf.reduce_sum(p * log_q, axis=-1)
+    kl = neg_ent - neg_cross_ent
+    return kl
 
-def frameCLoss(video, query, pos_label, v_mask):
-    # FrameCL
-    # query = tf.sigmoid(query)
-    # video = tf.sigmoid(video)
-    query = tf.math.l2_normalize(query, axis=1, epsilon=1e-12)
-    video = tf.math.l2_normalize(video, axis=1, epsilon=1e-12)
-    
-    pos_mask = tf.cast(pos_label, dtype=tf.float32)
-    neg_mask = (tf.ones_like(pos_mask) - pos_mask ) *  tf.cast(v_mask, dtype=tf.float32)
 
-    query = tf.reduce_max(input_tensor=query, axis=1)
-    query = tf.expand_dims(query, axis=2)
+def lossfun_aligment(tfeat, vfeat, tmask, vmask, inner_label):
+    tfeat = tf.reduce_sum(input_tensor=tfeat, axis=1)
+    tmask = tf.cast(tf.reduce_sum(tmask, axis=1, keepdims=True), dtype=tfeat.dtype)
+    tfeat = tf.nn.l2_normalize(tfeat / tmask, axis=1)
+    # tfeat = tfeat.redusum(1) / tmask.sum(1).unsqueeze(1)
+    # tfeat = F.normalize(tfeat, p=2, dim=1)  # B, channels
 
-    res = tf.matmul(video, query)
-    res = tf.squeeze(res)
+    vmask = tf.cast(vmask, dtype=inner_label.dtype)
+    frame_weights = inner_label / tf.reduce_sum(vmask, axis=1, keepdims=True)
+    # frame_weights = inner_label / vmask.sum(1, keepdim=True)
 
-    log_2 = math.log(2.)
-    E_pos = log_2 - tf.nn.softplus(- (res * pos_mask))
-    E_pos = tf.reduce_sum(input_tensor=E_pos * pos_mask, axis=1) / (tf.reduce_sum(input_tensor=pos_mask, axis=1) + 1e-12) 
+    vfeat = vfeat * tf.expand_dims(frame_weights, axis=2)
+    vfeat = tf.reduce_sum(input_tensor=vfeat, axis=1)
+    vfeat = tf.nn.l2_normalize(vfeat, axis=1)
+    # vfeat = vfeat * frame_weights.unsqueeze(2)
+    # vfeat = vfeat.sum(1)
+    # vfeat = F.normalize(vfeat, p=2, dim=1)
 
-    E_neg = log_2 - tf.nn.softplus(- (res * neg_mask))
-    E_neg = tf.reduce_sum(input_tensor=E_neg * neg_mask, axis=1) / (tf.reduce_sum(input_tensor=neg_mask, axis=1) + 1e-12) 
+        
+    video_sim = tf.matmul(vfeat, tf.transpose(vfeat))
+    video_sim = tf.nn.softmax(video_sim,  axis=-1)
+    # video_sim = torch.matmul(vfeat, vfeat.T)
+    # video_sim = torch.softmax(video_sim, dim=-1)
 
-    closs = E_neg - E_pos
-    closs = tf.reduce_mean(input_tensor=closs)
+    query_sim = tf.matmul(tfeat, tf.transpose(vfeat))
+    query_sim = tf.nn.softmax(query_sim,  axis=-1)
+    # query_sim = torch.matmul(tfeat, tfeat.T)
+    # query_sim = torch.softmax(query_sim, dim=-1)
 
-    return closs
+    # kl_loss = tf.nn.softmax_cross_entropy_with_logits(logits=query_sim, labels=video_sim) \
+    #         + tf.nn.softmax_cross_entropy_with_logits(logits=video_sim, labels=query_sim)
+    kl_loss = kl_for_log_probs(tf.math.log(query_sim), video_sim) + kl_for_log_probs(tf.math.log(video_sim), query_sim)
+    kl_loss = tf.reduce_sum(kl_loss)
+    # kl_loss = (F.kl_div(query_sim.log(), video_sim, reduction='sum') +
+    #             F.kl_div(video_sim.log(), query_sim, reduction='sum')) / 2
+    return kl_loss

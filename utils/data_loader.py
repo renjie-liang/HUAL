@@ -3,6 +3,7 @@ import random
 import numpy as np
 from utils.data_utils import pad_seq, pad_char_seq, pad_video_seq
 from utils.data_utils import gene_soft_label
+
 class TrainLoader:
     def __init__(self, dataset, visual_features, configs):
         super(TrainLoader, self).__init__()
@@ -97,14 +98,12 @@ class TrainLoader:
         return vfeats, vfeat_lens, word_ids, char_ids, s_labels, e_labels, match_labels, inner_labels
 
 
-
 class TestLoader:
     def __init__(self, datasets, visual_features, configs):
         self.visual_feats = visual_features
-        self.val_set = None #if datasets['val_set'] is None else datasets['val_set']
-        self.test_set = datasets
+        self.val_set = None if datasets['val_set'] is None else datasets['val_set']
+        self.test_set = datasets['test_set']
         self.batch_size = configs.train.batch_size
-        self.max_vlen = configs.model.max_vlen
 
     def set_batch_size(self, batch_size):
         self.batch_size = batch_size
@@ -156,13 +155,10 @@ class TestLoader:
         char_ids, _ = pad_char_seq(char_ids)
         char_ids = np.asarray(char_ids, dtype=np.int32)  # (batch_size, w_seq_len, c_seq_len)
         # process video features
-        vfeats, vfeat_lens = pad_video_seq(vfeats, max_length=self.max_vlen)
-        # vfeats, vfeat_lens = pad_video_seq(vfeats)
+        vfeats, vfeat_lens = pad_video_seq(vfeats)
         vfeats = np.asarray(vfeats, dtype=np.float32)  # (batch_size, v_seq_len, v_dim)
         vfeat_lens = np.asarray(vfeat_lens, dtype=np.int32)  # (batch_size, )
         return vfeats, vfeat_lens, word_ids, char_ids
-
-
 
 
 
@@ -174,7 +170,6 @@ class TrainNoSuffleLoader:
         self.val_set = None
         self.test_set = datasets
         self.batch_size = configs.train.batch_size
-        self.max_vlen = configs.model.max_vlen
 
     def set_batch_size(self, batch_size):
         self.batch_size = batch_size
@@ -226,7 +221,7 @@ class TrainNoSuffleLoader:
         char_ids, _ = pad_char_seq(char_ids)
         char_ids = np.asarray(char_ids, dtype=np.int32)  # (batch_size, w_seq_len, c_seq_len)
         # process video features
-        vfeats, vfeat_lens = pad_video_seq(vfeats, max_length=self.max_vlen)
+        vfeats, vfeat_lens = pad_video_seq(vfeats)
         vfeats = np.asarray(vfeats, dtype=np.float32)  # (batch_size, v_seq_len, v_dim)
         vfeat_lens = np.asarray(vfeat_lens, dtype=np.int32)  # (batch_size, )
         return vfeats, vfeat_lens, word_ids, char_ids

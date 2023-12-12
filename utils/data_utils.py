@@ -1,9 +1,21 @@
 import os
 import glob
-import json, yaml
+import json
 import pickle
 import numpy as np
 from tqdm import tqdm
+import yaml
+
+def load_yaml(filename):
+    with open(filename, encoding='utf8') as fr:
+        return yaml.safe_load(fr)
+
+
+
+def read_lines(filepath):
+    with open(filepath, "r") as f:
+        return [e.strip("\n") for e in f.readlines()]
+    
 
 
 def load_json(filename):
@@ -18,10 +30,6 @@ def save_json(data, filename, save_pretty=False, sort_keys=False):
             f.write(json.dumps(data, indent=4, sort_keys=sort_keys))
         else:
             json.dump(data, f)
-            
-def load_yaml(filename):
-    with open(filename, encoding='utf8') as fr:
-        return yaml.safe_load(fr)
 
 
 def load_lines(filename):
@@ -98,8 +106,8 @@ def compute_overlap(pred, gt):
     overlap = overlap if pred_is_list else overlap[0]
     return overlap
 
-def time_to_index(st, num_units, duration):
-    start_time, end_time = st
+
+def time_to_index(start_time, end_time, num_units, duration):
     s_times = np.arange(0, num_units).astype(np.float32) / float(num_units) * duration
     e_times = np.arange(1, num_units + 1).astype(np.float32) / float(num_units) * duration
     candidates = np.stack([np.repeat(s_times[:, None], repeats=num_units, axis=1),
@@ -165,27 +173,27 @@ def pad_video_seq(sequences, max_length=None):
 
 
 import math
-def get_gaussian_weight(center, vlen, max_vlen, alpha):
-    x = np.linspace(-1, 1, num=max_vlen,  dtype=np.float32)
-    sig = vlen / max_vlen
+def get_gaussian_weight(center, vlen, L, alpha):
+    x = np.linspace(-1, 1, num=L,  dtype=np.float32)
+    sig = vlen / L
     sig *= alpha
-    u = (center / (max_vlen-1)) * 2 - 1
+    u = (center / (L-1)) * 2 - 1
     weight = np.exp(-(x - u) ** 2 / (2 * sig ** 2)) / (math.sqrt(2 * math.pi) * sig)
     weight /= np.max(weight)
     weight[vlen:] = 0.0
     return weight
 
-def gene_soft_label(sidx, eidx, vlen, max_vlen, alpha):
-    Ssoft = get_gaussian_weight(sidx, vlen, max_vlen, alpha)
-    Esoft = get_gaussian_weight(eidx, vlen, max_vlen, alpha)
+def gene_soft_label(sidx, eidx, vlen, L, alpha):
+    Ssoft = get_gaussian_weight(sidx, vlen, L, alpha)
+    Esoft = get_gaussian_weight(eidx, vlen, L, alpha)
     
     # O, Start, Internel, End
     IOsoft = 1 - Ssoft - Esoft
-    mask_I = np.zeros(max_vlen)
+    mask_I = np.zeros(L)
     mask_I[sidx:eidx+1] = 1
     Isoft = IOsoft * mask_I
 
-    mask_O = np.zeros(max_vlen)
+    mask_O = np.zeros(L)
     mask_O[:sidx] = 1
     mask_O[eidx+1:vlen] = 1
     Osoft = IOsoft * mask_O

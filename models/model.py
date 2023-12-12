@@ -1,10 +1,7 @@
 import tensorflow as tf
-from models.ops import  create_optimizer
-from models.layers import layer_norm, conv1d, cq_attention, cq_concat, matching_loss, localizing_loss, ans_predictor, frameCLoss
+from models.ops import count_params, create_optimizer
+from models.layers import layer_norm, conv1d, cq_attention, cq_concat, matching_loss, localizing_loss, ans_predictor, lossfun_aligment
 from models.modules import word_embs, char_embs, add_pos_embs, conv_block, conditioned_predictor, dual_attn_block
-import numpy as np
-import math
-
 
 
 class SeqPAN:
@@ -15,7 +12,6 @@ class SeqPAN:
             self.global_step = tf.compat.v1.train.create_global_step()
             self._add_placeholders()
             self._build_model(word_vectors=word_vectors)
-            
     def _add_placeholders(self):
         self.video_inputs = tf.compat.v1.placeholder(dtype=tf.float32, shape=[None, None, self.configs.model.vdim],
                                            name='video_inputs')
@@ -25,11 +21,10 @@ class SeqPAN:
         self.y1 = tf.compat.v1.placeholder(dtype=tf.float32, shape=[None, None], name='start_indexes')
         self.y2 = tf.compat.v1.placeholder(dtype=tf.float32, shape=[None, None], name='end_indexes')
         self.match_labels = tf.compat.v1.placeholder(dtype=tf.int32, shape=[None, None], name='match_labels')
+        self.inner_labels = tf.compat.v1.placeholder(dtype=tf.float32, shape=[None, None], name='inner_labels')
         # hyper-parameters
         self.drop_rate = tf.compat.v1.placeholder_with_default(input=0.0, shape=[], name='dropout_rate')
         self.lr = tf.compat.v1.placeholder(dtype=tf.float32, name='learning_rate')
-        self.pos_label =  tf.compat.v1.placeholder(dtype=tf.float32, name='pos_label')
-
 
     def _build_model(self, word_vectors):
         # create mask for both visual and textual features
@@ -78,13 +73,16 @@ class SeqPAN:
                                     reuse=False, name='v2q_attn')
         fuse_feats = cq_concat(q2v_feats, v2q_feats, pool_mask=q_mask, reuse=False, name='cq_cat')
 
-
+        loss_align = lossfun_aligment(v2q_feats, q2v_feats, q_mask, v_mask, self.inner_labels)
+        # self.tmp = loss_align
         
         # compute matching loss and matching score
+        # label_embs = tf.get_variable(name='label_emb', shape=[4, self.configs.model.dim], dtype=tf.float32,
+        #                              trainable=True, initializer=tf.orthogonal_initializer())
         self.match_loss, self.match_scores = matching_loss(fuse_feats, self.match_labels, label_size=4, mask=v_mask,
                                                       gumbel=not self.configs.loss.no_gumbel, tau=self.configs.loss.tau,
                                                       reuse=False)
-        
+
         label_embs = tf.compat.v1.get_variable(name='label_emb', shape=[4, self.configs.model.dim], dtype=tf.float32,
                                      trainable=True, initializer=tf.compat.v1.orthogonal_initializer())
         ortho_constraint = tf.multiply(tf.matmul(label_embs, label_embs, transpose_b=True),
@@ -102,20 +100,23 @@ class SeqPAN:
                                                          num_heads=self.configs.model.num_heads, drop_rate=self.drop_rate,
                                                          attn_drop=self.drop_rate, max_pos_len=self.configs.model.max_vlen,
                                                          activation=tf.nn.relu, name="predictor")
+
         # compute localization loss
+        # loss_s, loss_e = localizing_loss(self.start_logits, self.end_logits, self.y1, self.y2, v_mask)
+        # std_s = tf.math.reduce_variance(self.start_logits)
+        # std_e = tf.math.reduce_variance(self.end_logits)
+        # self.loc_loss = loss_s / std_s + std_s + loss_e / std_e + std_e
+
         self.loc_loss = localizing_loss(self.start_logits, self.end_logits, self.y1, self.y2, v_mask)
-
-        std = tf.math.reduce_variance(self.start_logits) + tf.math.reduce_variance(self.end_logits)
-        self.loc_loss = self.loc_loss / std + std
-      
-
-        # closs = frameCLoss(fuse_feats, v2q_feats, self.pos_label, v_mask)
-
+        # std = tf.math.reduce_variance(self.start_logits) + tf.math.reduce_variance(self.end_logits)
+        # self.loc_loss = self.loc_loss / std + std
         
+        # align loss
+        
+
         # compute predicted indexes
-        # self.tmp1 = self.video_seq_len
-        self.start_index, self.end_index = ans_predictor(self.start_logits, self.end_logits, v_mask, self.match_scores)
+        self.start_index, self.end_index = ans_predictor(self.start_logits, self.end_logits, v_mask)
         # total loss
-        self.loss = self.loc_loss + self.configs.loss.match_lambda * self.match_loss# + closs * 1
+        self.loss = self.loc_loss + self.configs.loss.match_lambda * self.match_loss + loss_align * 1.0
         # create optimizer
         self.train_op = create_optimizer(self.loss, self.lr, clip_norm=self.configs.train.clip_norm)

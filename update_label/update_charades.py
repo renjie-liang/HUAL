@@ -8,22 +8,57 @@ from tqdm import tqdm
 from utils.utils_hual import miou_two_dataset, calculate_iou, cp_testjson
 from utils.utils_hual import get_uncert_model, sigmoid, append_AP, center_width_gauss
 from utils.utils_hual import get_distance_score, get_distance_score_shift
-from utils.data_utils import save_json, load_json, load_pickle, time_to_index, index_to_time
+from utils.data_utils import save_json, load_json, load_pickle
 
-F_renew = {"pos":{
-                "old":      [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-                "model":    [0.8, 0.8, 0.8, 0.8, 0.8, 0.8],
-                "distance": [4.0, 0.2, 0.2, 0.2, 0.2, 0.2], 
+def time_to_index_v2(t, duration, vlen):
+    if isinstance(t, list):
+        res = []
+        for i in t:
+            res.append(time_to_index_v2(i, duration, vlen))
+        return res
+    else:
+        return round(t / duration * (vlen - 1))
+
+def index_to_time_v2(t, duration, vlen):
+    if isinstance(t, list):
+        res = []
+        for i in t:
+            res.append(index_to_time_v2(i, duration, vlen))
+        return res
+    else:
+        return round(t / (vlen-1) * duration, 2)
+    
+    
+F_renew = {"charades":{
+                "pos":{
+                    "old":      [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+                    "model":    [0.8, 0.8, 0.8, 0.8, 0.8, 0.8],
+                    "distance": [4.0, 0.2, 0.2, 0.2, 0.2, 0.2], 
+                    },
+                "neg":{
+                    "old":      [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+                    "model":    [2.4, 0.2, 0.2, 0.2, 0.2, 0.2],
+                    "distance": [2.0, 0.2, 0.2, 0.2, 0.2, 0.2], 
+                    },
+                "uncert":[0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
                 },
-            "neg":{
-                "old":      [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-                "model":    [2.4, 0.2, 0.2, 0.2, 0.2, 0.2],
-                "distance": [2.0, 0.2, 0.2, 0.2, 0.2, 0.2], 
-                },
-            "uncert":[0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+           "anet":{
+                "pos":{          #1.0, 2.0,
+                    "old":      [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+                    "model":    [2.0, 2.0, 2.0, 2.0, 2.0, 2.0],
+                    "distance": [2.0, 1.8, 1.6, 1.5, 1.5, 1.5], 
+                    },
+                "neg":{
+                    "old":      [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+                    "model":    [2.0, 2.0, 2.0, 2.0, 2.0, 2.0],
+                    "distance": [2.0, 1.8, 1.6, 1.5, 1.5, 1.5], 
+                    },
+                "uncert":[0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+                     
+                }
             }
 F_renew = EasyDict(F_renew)
-
+F_renew = F_renew.charades
 
 def mask_activepoints(start_prob, end_prob, pos_idx, neg_idx, vlen):
     if len(pos_idx) == 0:
@@ -106,8 +141,8 @@ def get_uncert_rank(data_old, data_GT, last_prop):
         max_vlen = len(sprob)
 
         gt_time = data_GT[idx][2]
-        gt_idx = time_to_index(gt_time, duration, vlen)
-        old_idx = time_to_index(data_old[idx][2], duration, vlen)
+        gt_idx = time_to_index_v2(gt_time, duration, vlen)
+        old_idx = time_to_index_v2(data_old[idx][2], duration, vlen)
 
         uncert_model = get_uncert_model(last_prop[idx]["prop_logits1"], last_prop[idx]["prop_logits2"], vlen)
         uncert_dist = get_distance_score(pos_idx, neg_idx, vlen=vlen, max_vlen=max_vlen)
@@ -164,7 +199,7 @@ def main(old_path, new_path, prop_path, I):
         obsert_point = int(np.argmax(uncert_frame))
         new_ap = append_AP(obsert_point, old_ap, gt_idx)
         new_idx = renew_label(old_idx, new_ap, sprob, eprob, vlen, max_vlen, I)
-        new_time = index_to_time(new_idx, duration, vlen)
+        new_time = index_to_time_v2(new_idx, vlen, duration)
 
         data_old[idx][2] = new_time
         data_old[idx][4] = new_ap
@@ -178,6 +213,7 @@ if __name__ == "__main__":
 
     task, I = sys.argv[1:3]
     I = int(I)
+    # global F_renew
     
     old_path = "./data/{}_re{}/train.json".format(task, I-1)
     new_path = "./data/{}_re{}/train.json".format(task, I)

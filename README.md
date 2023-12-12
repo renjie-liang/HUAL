@@ -1,7 +1,6 @@
 # HUAL
 CVPR 2023 "Are Binary Annotations Sufficient? Video Moment Retrieval via Hierarchical Uncertainty-based Active Learning"
 
-** There are still some bugs when inferring, because we reconstruct our code for easily reading. **
 
 ![overview](/images/architecture.png)
 
@@ -37,13 +36,11 @@ HUAL
 ## Quick Start
 **Train**
 ```shell script
-# The above scripts can both update pseudo label and train model iteratively.
-# The processing can also be run step by step as follow. '--re' is the times of iteration. 
+python run_charades.py
+
+# it include three step:
 # 1. Update pseudo label.
-python update_label/update_charades.py 0
 # 2. Train model.
-python main.py --config ./configs/charades/SeqPAN.yaml --gpu_idx 1 --re 0 --suffix debug --mode train
 # 3. Generate model predict of train dataset.
-python main.py --config ./configs/charades/SeqPAN.yaml --gpu_idx 1 --re 0 --suffix debug --mode test
 
 ```

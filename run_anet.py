@@ -3,8 +3,8 @@ from utils.utils_hual import generate_configs
 from utils.data_gen import gen_train_data_cache_path
 # renew label -> train model -> test model -> ...
 gpu_idx = 0
-task = "charades"
-base_configs_path = "./configs/charades/SeqPAN.yaml"
+task = "anet"
+base_configs_path = "./configs/anet/SeqPAN.yaml"
 for I in range(1, 2):
     SUFFIX = "re{}".format(I)
 

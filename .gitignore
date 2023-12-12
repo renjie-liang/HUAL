@@ -8,4 +8,5 @@ data_pkl
 logs
 data
 ckpt
+results
 

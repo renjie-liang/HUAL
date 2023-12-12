@@ -7,6 +7,7 @@ import pickle
 import math
 import os
 import shutil
+from omegaconf import OmegaConf
 
 
 def calculate_iou(i0, i1):
@@ -31,122 +32,6 @@ def miou_two_dataset(path1, path2):
         iou = calculate_iou(x1[2], x2[2])
         miou.append(iou)
     return np.mean(miou)
-
-
-# def miou_two_dataset_idx(path1, path2, vlen_path):
-
-#     with open(vlen_path, 'rb') as fp:
-#         vlens = pickle.load(fp)
-#     with open(path1, mode='r') as f:
-#         data1 = json.load(f)
-#     with open(path2, mode='r') as f:
-#         data2 = json.load(f)
-#     assert len(data1) == len(data2)
-#     assert len(data1) == len(vlens)
-
-#     miou = []
-#     for i in range(len(data1)):
-#         x1 = data1[i]
-#         x2 = data2[i]
-#         v  = vlens[i]
-#         assert x1[0] == x2[0]
-#         assert x1[0] == x2[0]
-#         assert x1[0] == v['vid']
-#         v_len = v["v_len"]
-#         duration = x1[1]
-
-#         x1_idx = time_to_index(x1[2], duration, v_len)
-#         x2_idx = time_to_index(x2[2], duration, v_len)
-#         iou = calculate_iou(x1_idx, x2_idx)
-#         miou.append(iou)
-#     return np.mean(miou)
-
-# def miou_two_dataset_idx(path1, path2, vlen):
-#     with open(path1, mode='r') as f:
-#         data1 = json.load(f)
-#     with open(path2, mode='r') as f:
-#         data2 = json.load(f)
-#     assert len(data1) == len(data2)
-
-#     miou = []
-#     for i in range(len(data1)):
-#         x1 = data1[i]
-#         x2 = data2[i]
-#         assert x1[0] == x2[0]
-#         assert x1[0] == x2[0]
-#         duration = x1[1]
-#         x1_idx = time_to_index(x1[2], duration, vlen)
-#         x2_idx = time_to_index(x2[2], duration, vlen)
-#         iou = calculate_iou(x1_idx, x2_idx)
-#         miou.append(iou)
-#     return np.mean(miou)
-
-
-
-def get_crossentroy(logist, label):
-    p = torch.from_numpy(logist).unsqueeze(0)
-    label = torch.tensor(label).unsqueeze(0)
-    return F.cross_entropy(p, label) 
-
-
-def get_klloss(prop_logits1, prop_logits2):
-    Sprob1, Eprob1 = prop_logits1
-    Sprob2, Eprob2 = prop_logits2
-    
-    Sprob1 = torch.from_numpy(Sprob1)
-    Sprob2 = torch.from_numpy(Sprob2)
-    Eprob1 = torch.from_numpy(Eprob1)
-    Eprob2 = torch.from_numpy(Eprob2)
-    
-    res = F.kl_div(Eprob1, Eprob2) + F.kl_div(Sprob1, Sprob2)
-    return res.item()
-
-
-# def time_to_index(t, duration, vlen):
-#     if isinstance(t, list):
-#         res = []
-#         for i in t:
-#             res.append(time_to_index(i, duration, vlen))
-#         return res
-#     else:
-#         return round(t / duration * (vlen - 1))
-
-# def index_to_time(t, duration, vlen):
-#     if isinstance(t, list):
-#         res = []
-#         for i in t:
-#             res.append(index_to_time(i, duration, vlen))
-#         return res
-#     else:
-#         return round(t / (vlen-1) * duration, 2)
-
-
-def hist_data(file_path):
-    with open(file_path, mode='r') as f:
-        data = json.load(f)
-    S, E = [], []
-    for i in data:
-        s, e = np.array(i[2]) / i[1]
-        S.append(s)
-        E.append(e)
-    return S, E
-
-
-
-
-# def plt_hist(file_path, save_name, bins=64, high=20000):
-#     S, E = hist_data(file_path)
-#     plt.cla()
-#     plt.hist(S, bins=bins)
-#     plt.xlim(0, 1)
-#     plt.ylim(0, high)
-#     plt.savefig(save_name.format("S"))
-#     plt.cla()
-#     plt.hist(E, bins=bins)
-#     plt.ylim(0, high)
-#     plt.xlim(0, 1)
-#     plt.savefig(save_name.format("E"))
-
 
 
 def fill_isactivate(pos_idx, neg_idx, vlen, max_vlen):
@@ -292,7 +177,6 @@ def cp_testjson(gt_path, new_path):
     shutil.copy(gt_test, new_test)
 
 
-from omegaconf import OmegaConf
 
 def generate_configs(base_configs_path, task, I):
     conf = OmegaConf.load(base_configs_path)
@@ -306,3 +190,123 @@ def generate_configs(base_configs_path, task, I):
     with open(new_config_path, "w") as f:
         OmegaConf.save(conf, f)
     return new_config_path, conf
+
+
+
+
+
+
+# def miou_two_dataset_idx(path1, path2, vlen_path):
+
+#     with open(vlen_path, 'rb') as fp:
+#         vlens = pickle.load(fp)
+#     with open(path1, mode='r') as f:
+#         data1 = json.load(f)
+#     with open(path2, mode='r') as f:
+#         data2 = json.load(f)
+#     assert len(data1) == len(data2)
+#     assert len(data1) == len(vlens)
+
+#     miou = []
+#     for i in range(len(data1)):
+#         x1 = data1[i]
+#         x2 = data2[i]
+#         v  = vlens[i]
+#         assert x1[0] == x2[0]
+#         assert x1[0] == x2[0]
+#         assert x1[0] == v['vid']
+#         v_len = v["v_len"]
+#         duration = x1[1]
+
+#         x1_idx = time_to_index(x1[2], duration, v_len)
+#         x2_idx = time_to_index(x2[2], duration, v_len)
+#         iou = calculate_iou(x1_idx, x2_idx)
+#         miou.append(iou)
+#     return np.mean(miou)
+
+# def miou_two_dataset_idx(path1, path2, vlen):
+#     with open(path1, mode='r') as f:
+#         data1 = json.load(f)
+#     with open(path2, mode='r') as f:
+#         data2 = json.load(f)
+#     assert len(data1) == len(data2)
+
+#     miou = []
+#     for i in range(len(data1)):
+#         x1 = data1[i]
+#         x2 = data2[i]
+#         assert x1[0] == x2[0]
+#         assert x1[0] == x2[0]
+#         duration = x1[1]
+#         x1_idx = time_to_index(x1[2], duration, vlen)
+#         x2_idx = time_to_index(x2[2], duration, vlen)
+#         iou = calculate_iou(x1_idx, x2_idx)
+#         miou.append(iou)
+#     return np.mean(miou)
+
+
+
+# def get_crossentroy(logist, label):
+#     p = torch.from_numpy(logist).unsqueeze(0)
+#     label = torch.tensor(label).unsqueeze(0)
+#     return F.cross_entropy(p, label) 
+
+
+# def get_klloss(prop_logits1, prop_logits2):
+#     Sprob1, Eprob1 = prop_logits1
+#     Sprob2, Eprob2 = prop_logits2
+    
+#     Sprob1 = torch.from_numpy(Sprob1)
+#     Sprob2 = torch.from_numpy(Sprob2)
+#     Eprob1 = torch.from_numpy(Eprob1)
+#     Eprob2 = torch.from_numpy(Eprob2)
+    
+#     res = F.kl_div(Eprob1, Eprob2) + F.kl_div(Sprob1, Sprob2)
+#     return res.item()
+
+
+# def time_to_index(t, duration, vlen):
+#     if isinstance(t, list):
+#         res = []
+#         for i in t:
+#             res.append(time_to_index(i, duration, vlen))
+#         return res
+#     else:
+#         return round(t / duration * (vlen - 1))
+
+# def index_to_time(t, duration, vlen):
+#     if isinstance(t, list):
+#         res = []
+#         for i in t:
+#             res.append(index_to_time(i, duration, vlen))
+#         return res
+#     else:
+#         return round(t / (vlen-1) * duration, 2)
+
+
+# def hist_data(file_path):
+#     with open(file_path, mode='r') as f:
+#         data = json.load(f)
+#     S, E = [], []
+#     for i in data:
+#         s, e = np.array(i[2]) / i[1]
+#         S.append(s)
+#         E.append(e)
+#     return S, E
+
+
+
+
+# def plt_hist(file_path, save_name, bins=64, high=20000):
+#     S, E = hist_data(file_path)
+#     plt.cla()
+#     plt.hist(S, bins=bins)
+#     plt.xlim(0, 1)
+#     plt.ylim(0, high)
+#     plt.savefig(save_name.format("S"))
+#     plt.cla()
+#     plt.hist(E, bins=bins)
+#     plt.ylim(0, high)
+#     plt.xlim(0, 1)
+#     plt.savefig(save_name.format("E"))
+

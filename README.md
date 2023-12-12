@@ -13,7 +13,7 @@ https://app.box.com/s/d7q5atlidb31cuj1u8znd7prgrck1r1s).
 
 Download the word embeddings from [here](http://nlp.stanford.edu/data/glove.840B.300d.zip). Modify the path setting in `./configs/charades/SeqPAN.yaml`.
 
-Download the anet initiate pkl from https://app.box.com/s/mlcxc8oq3zanz2mzamze0hb9yyt51ij8, put it to ./results/anet/re0.pkl
+Download the anet initiate pkl from [Box Drive](https://app.box.com/s/mlcxc8oq3zanz2mzamze0hb9yyt51ij8). , put it to ./results/anet/re0.pkl
 
 Directory hierarchies are shown below:
 ```

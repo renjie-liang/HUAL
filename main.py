@@ -91,7 +91,6 @@ if args.mode.lower() == 'test':
             saver = tf.compat.v1.train.Saver(max_to_keep=3)
             sess.run(tf.compat.v1.global_variables_initializer())
             saver.restore(sess, tf.train.latest_checkpoint(model_dir))
-
             r1i3, r1i5, r1i7, mi = test_epoch(sess, model, test_loader)
             test_line = "TEST:\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}\t".format(r1i3, r1i5, r1i7, mi)
             logger.info(test_line)
@@ -110,6 +109,5 @@ elif args.mode.lower() == "infer_trainset":
             saver.restore(sess, tf.train.latest_checkpoint(model_dir))
             r1i3, r1i5, r1i7, mi, *_ = eval_test_save(sess=sess, model=model, data_loader=train_nosuffle_loader, task=configs.task, suffix=configs.suffix)
             test_line = "predict train set:\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}\t".format(r1i3, r1i5, r1i7, mi)
-
 else:
     raise ValueError("Unknown mode {}!!!".format(configs.mode))

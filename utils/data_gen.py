@@ -182,11 +182,11 @@ def gen_or_load_dataset(configs):
     # generate dataset
     data_list = [train_data, test_data] if val_data is None else [train_data, val_data, test_data]
     word_dict, char_dict, vectors = vocab_emb_gen(data_list, configs.paths.glove_path)
-    train_set = dataset_gen(train_data, vfeat_lens, word_dict, char_dict, configs.max_pos_len, 'train')
-    # train_set = dataset_gen_active(train_data, vfeat_lens, word_dict, char_dict, configs.max_pos_len, 'train')
+    train_set = dataset_gen(train_data, vfeat_lens, word_dict, char_dict, configs.model.max_vlen, 'train')
+    # train_set = dataset_gen_active(train_data, vfeat_lens, word_dict, char_dict, configs.model.max_vlen, 'train')
     val_set = None if val_data is None else dataset_gen(val_data, vfeat_lens, word_dict, char_dict,
-                                                        configs.max_pos_len, 'val')
-    test_set = dataset_gen(test_data, vfeat_lens, word_dict, char_dict, configs.max_pos_len, 'test')
+                                                        configs.model.max_vlen, 'val')
+    test_set = dataset_gen(test_data, vfeat_lens, word_dict, char_dict, configs.model.max_vlen, 'test')
     # save dataset
     n_val = 0 if val_set is None else len(val_set)
     dataset = {'train_set': train_set, 'val_set': val_set, 'test_set': test_set, 'word_dict': word_dict,

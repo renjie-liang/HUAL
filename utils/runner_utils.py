@@ -98,9 +98,6 @@ def eval_test_save(sess, model, data_loader, task, suffix, epoch=None, global_st
                    'prop_logits2': [start_logits2[i], end_logits2[i]],
                    'm_score': match_scores[i],
             }
-            print(int(raw_data[i]["v_len"]))
-            print([int(start_indexes[i]), int(end_indexes[i])])
-            
             save_list.append(tmp)
     
     with open("./results/{}/{}.pkl".format(task, suffix), 'wb') as f:
